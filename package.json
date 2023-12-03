@@ -1,12 +1,12 @@
 {
-  "name": "@zkp-ld/rdf-proofs-wasm",
+  "name": "@dorakemon/rdf-proofs-wasm",
   "author": "yamdan",
   "description": "WASM binding for rdf-proofs",
   "version": "0.13.0",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zkp-ld/rdf-proofs-wasm.git"
+    "url": "git+https://github.com/dorakemon/rdf-proofs-wasm.git"
   },
   "files": [
     "lib/*"
@@ -23,14 +23,16 @@
     "build": "./scripts/build-package.sh DEBUG",
     "build:release": "./scripts/build-package.sh RELEASE",
     "build:profiling": "./scripts/build-package.sh PROFILING",
-    "test": "jest"
+    "test": "jest",
+    "clean": "rimraf target"
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",
     "jest": "^29.6.2",
     "prettier": "^3.0.2",
+    "rimraf": "^5.0.5",
     "rollup": "^3.28.0",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.1.6"    
+    "typescript": "^5.1.6"
   }
 }

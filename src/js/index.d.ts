@@ -59,6 +59,7 @@ export interface DeriveProofRequest {
   readonly withPpid?: boolean;
   readonly predicates?: string[];
   readonly circuits?: Map<string, CircuitString>;
+  readonly openerPubKey?: string;
 }
 
 export interface DerivedProof {
@@ -72,6 +73,12 @@ export interface VerifyProofRequest {
   readonly challenge?: string;
   readonly domain?: string;
   readonly snarkVerifyingKeys?: Map<string, string>;
+  readonly openerPubKey?: string;
+}
+
+export interface EllipticElGamalKeyPair {
+  readonly secretKey: string;
+  readonly publicKey: string;
 }
 
 /**
@@ -85,7 +92,12 @@ export function keyGen(): KeyPair;
  * @param {string} keyGraph
  * @returns {string}
  */
-export function sign(document: string, proof: string, keyGraph: string): string;
+export function sign(
+  document: string,
+  proof: string,
+  keyGraph: string,
+  secret?: Uint8Array,
+): string;
 
 /**
  * @param {string} document
@@ -173,3 +185,20 @@ export function deriveProof(request: DeriveProofRequest): string;
  * @returns {VerifyResult}
  */
 export function verifyProof(request: VerifyProofRequest): VerifyResult;
+
+/**
+ * @return {EllipticElGamalKeyPair}
+ */
+export function ellipticElGamalKeyGen(): EllipticElGamalKeyPair;
+
+/**
+ * @param sk
+ * @param cipherText
+ * @returns {string}
+ */
+export function ellipticElGamalDecrypt(sk: string, cipherText: string): string;
+
+/**
+ *
+ */
+export function getEncryptedUid(uid: Uint8Array): string;

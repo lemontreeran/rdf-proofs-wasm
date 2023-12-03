@@ -34,10 +34,10 @@ module.exports.keyGen = () => {
   return wasm.keyGen();
 }
 
-module.exports.sign = (document, proof, keyGraph) => {
+module.exports.sign = (document, proof, keyGraph, secret) => {
   requireWasmInitialized();
 
-  return wasm.sign(document, proof, keyGraph);
+  return wasm.sign(document, proof, keyGraph, secret);
 }
 
 module.exports.verify = (document, proof, keyGraph) => {
@@ -86,4 +86,22 @@ module.exports.verifyProof = (request) => {
   requireWasmInitialized();
 
   return wasm.verifyProof(request);
+}
+
+module.exports.ellipticElGamalKeyGen = () => {
+  requireWasmInitialized();
+
+  return wasm.ellipticElGamalKeyGen();
+}
+
+module.exports.ellipticElGamalDecrypt = (sk, cipherText) => {
+  requireWasmInitialized();
+
+  return wasm.ellipticElGamalDecrypt(sk, cipherText);
+}
+
+module.exports.getEncryptedUid = (uid) => {
+  requireWasmInitialized();
+
+  return wasm.getEncryptedUid(uid);
 }

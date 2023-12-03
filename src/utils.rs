@@ -61,6 +61,8 @@ pub struct DeriveProofRequest {
     pub with_ppid: Option<bool>,
     pub predicates: Option<Vec<String>>,
     pub circuits: Option<HashMap<String, CircuitString>>,
+    #[serde(rename = "openerPubKey")]
+    pub opener_pub_key: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -72,6 +74,8 @@ pub struct VerifyProofRequest {
     pub domain: Option<String>,
     #[serde(rename = "snarkVerifyingKeys")]
     pub snark_verifying_keys: Option<HashMap<String, String>>,
+    #[serde(rename = "openerPubKey")]
+    pub opener_pub_key: Option<String>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

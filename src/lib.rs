@@ -5,8 +5,11 @@ use crate::utils::get_seeded_rng;
 use error::RDFProofsWasmError;
 use rdf_proofs::{
     ark_to_base64url, blind_sign_string, blind_verify_string, derive_proof_string,
-    key_gen::generate_keypair, request_blind_sign_string, sign_string, unblind_string,
-    verify_blind_sign_request_string, verify_proof_string, verify_string, VcPairString,
+    elliptic_elgamal_decrypt, elliptic_elgamal_keygen, get_encrypted_uid,
+    key_gen::{generate_keypair, generate_params},
+    multibase_to_ark, request_blind_sign_string, sign_string, str_to_secret_key, unblind_string,
+    verify_blind_sign_request_string, verify_proof_string, verify_string, ElGamalCiphertext,
+    ElGamalPublicKey, VcPairString,
 };
 use utils::{set_panic_hook, DeriveProofRequest, KeyPair, VerifyProofRequest, VerifyResult};
 use wasm_bindgen::prelude::*;
@@ -26,12 +29,17 @@ pub fn key_gen_caller() -> Result<JsValue, JsValue> {
 }
 
 #[wasm_bindgen(js_name = sign)]
-pub fn sign_caller(document: &str, proof: &str, key_graph: &str) -> Result<String, JsValue> {
+pub fn sign_caller(
+    document: &str,
+    proof: &str,
+    key_graph: &str,
+    secret: Option<Vec<u8>>,
+) -> Result<String, JsValue> {
     set_panic_hook();
 
     let mut rng = get_seeded_rng();
-    let proof_value =
-        sign_string(&mut rng, document, proof, key_graph).map_err(RDFProofsWasmError::from)?;
+    let proof_value = sign_string(&mut rng, document, proof, key_graph, secret.as_deref())
+        .map_err(RDFProofsWasmError::from)?;
     Ok(proof_value)
 }
 
@@ -156,6 +164,19 @@ pub fn derive_proof_caller(request: JsValue) -> Result<JsValue, JsValue> {
         })
         .collect();
 
+    let opener_pub_key: Option<ElGamalPublicKey> = match request.opener_pub_key {
+        Some(base64_key) => match multibase_to_ark::<ElGamalPublicKey>(&base64_key) {
+            Ok(key) => Some(key),
+            Err(e) => {
+                return Err(JsValue::from_str(&format!(
+                    "Error in multibase_to_ark: {:?} {:?}",
+                    base64_key, e
+                )));
+            }
+        },
+        None => None,
+    };
+
     let vp = derive_proof_string(
         &mut rng,
         &vc_pairs,
@@ -168,6 +189,7 @@ pub fn derive_proof_caller(request: JsValue) -> Result<JsValue, JsValue> {
         request.with_ppid,
         request.predicates.as_ref(),
         request.circuits.as_ref(),
+        opener_pub_key,
     )
     .map_err(RDFProofsWasmError::from)?;
     Ok(serde_wasm_bindgen::to_value(&vp)?)
@@ -181,6 +203,18 @@ pub fn verify_proof_caller(request: JsValue) -> Result<JsValue, JsValue> {
 
     let mut rng = get_seeded_rng();
 
+    let opener_pub_key: Option<ElGamalPublicKey> = match request.opener_pub_key {
+        Some(base64_key) => match multibase_to_ark::<ElGamalPublicKey>(&base64_key) {
+            Ok(key) => Some(key),
+            Err(e) => {
+                return Err(JsValue::from_str(&format!(
+                    "Error in multibase_to_ark: {:?} {:?}",
+                    base64_key, e
+                )));
+            }
+        },
+        None => None,
+    };
     match verify_proof_string(
         &mut rng,
         &request.vp,
@@ -188,6 +222,7 @@ pub fn verify_proof_caller(request: JsValue) -> Result<JsValue, JsValue> {
         request.challenge.as_deref(),
         request.domain.as_deref(),
         request.snark_verifying_keys,
+        opener_pub_key,
     ) {
         Ok(_) => Ok(serde_wasm_bindgen::to_value(&VerifyResult {
             verified: true,
@@ -198,4 +233,36 @@ pub fn verify_proof_caller(request: JsValue) -> Result<JsValue, JsValue> {
             error: Some(format!("{:?}", e)),
         })?),
     }
+}
+
+#[wasm_bindgen(js_name = ellipticElGamalKeyGen)]
+pub fn elliptic_elgamal_key_gen_caller() -> Result<JsValue, JsValue> {
+    set_panic_hook();
+
+    let mut rng = get_seeded_rng();
+    let (pk, sk) = elliptic_elgamal_keygen(&mut rng).map_err(RDFProofsWasmError::from)?;
+    let pk = ark_to_base64url(&pk).map_err(RDFProofsWasmError::from)?;
+    let sk = ark_to_base64url(&sk.0).map_err(RDFProofsWasmError::from)?;
+    Ok(serde_wasm_bindgen::to_value(&KeyPair {
+        secret_key: sk,
+        public_key: pk,
+    })?)
+}
+
+#[wasm_bindgen(js_name = ellipticElGamalDecrypt)]
+pub fn elliptic_elgamal_decrypt_caller(sk: &str, cipher_text: &str) -> Result<JsValue, JsValue> {
+    set_panic_hook();
+
+    let sk = str_to_secret_key(sk).map_err(RDFProofsWasmError::from)?;
+    let c: ElGamalCiphertext = multibase_to_ark(cipher_text).map_err(RDFProofsWasmError::from)?;
+    let m = elliptic_elgamal_decrypt(&sk, &c).map_err(RDFProofsWasmError::from)?;
+    let m = ark_to_base64url(&m).map_err(RDFProofsWasmError::from)?;
+    Ok(serde_wasm_bindgen::to_value(&m)?)
+}
+
+#[wasm_bindgen(js_name = getEncryptedUid)]
+pub fn get_encrypted_uid_caller(uid: &[u8]) -> Result<String, JsValue> {
+    let params = generate_params(1);
+    let encrypted_uid = get_encrypted_uid(&uid.to_vec(), &params.h[0]).unwrap();
+    Ok(encrypted_uid)
 }
