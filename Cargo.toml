@@ -1,6 +1,6 @@
 [package]
 name = "rdf-proofs-wasm"
-version = "0.13.0"
+version = "0.14.0"
 edition = "2021"
 authors = ["yamdan"]
 license = "MIT"
@@ -21,7 +21,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 wasm-bindgen = "0.2"
 js-sys = "0.3"
-rdf-proofs = { git = "https://github.com/dorakemon/rdf-proofs.git", rev="4032ca8", default-features = false, features = [
+rdf-proofs = { git = "https://github.com/lemontreeran/rdf-proofs.git", rev="5b2bfb0", default-features = false, features = [
     "wasmer-js",
 ] }
 web-sys = { version = "0.3", features = ["console"] }

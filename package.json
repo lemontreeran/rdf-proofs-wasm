@@ -1,12 +1,12 @@
 {
-  "name": "@dorakemon/rdf-proofs-wasm",
-  "author": "yamdan",
+  "name": "@lemontreeran/rdf-proofs-wasm",
+  "author": "lemontreeran",
   "description": "WASM binding for rdf-proofs",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dorakemon/rdf-proofs-wasm.git"
+    "url": "git+https://github.com/lemontreeran/rdf-proofs-wasm.git"
   },
   "files": [
     "lib/*"
